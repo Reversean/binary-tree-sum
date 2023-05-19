@@ -1,0 +1,9 @@
+file(GLOB_RECURSE SEQUENTIAL_SRC_FILES *.cpp *.h)
+
+list(APPEND ALL_SEQUENTIAL_SRC_FILES ${CORE_SRC_FILES} ${SEQUENTIAL_SRC_FILES})
+
+message(STATUS "ALL_SEQUENTIAL_SRC_FILES = ${ALL_SEQUENTIAL_SRC_FILES}")
+
+add_executable(sequential ${ALL_SEQUENTIAL_SRC_FILES})
+
+target_link_libraries(sequential -fopenmp)
