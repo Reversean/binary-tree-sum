@@ -102,22 +102,25 @@ long long TreeNode::SumOpenMPRoutine(TreeNode *node) {
     }
 
     node->child_sum_ = 0;
+    int left_sum = 0;
+    int right_sum = 0;
 
-#pragma omp parallel sections num_threads(2) default(none) shared(node)
+#pragma omp parallel sections num_threads(2) default(none) shared(node, left_sum, right_sum)
     {
 #pragma omp section
         {
             if (node->left_child_ != nullptr) {
-                node->child_sum_ += SumOpenMPRoutine(node->left_child_);
+                left_sum = SumOpenMPRoutine(node->left_child_);
             }
         }
 #pragma omp section
         {
             if (node->right_child_ != nullptr) {
-                node->child_sum_ += SumOpenMPRoutine(node->right_child_);
+                right_sum = SumOpenMPRoutine(node->right_child_);
             }
         }
     }
+    node->child_sum_ = left_sum + right_sum;
     return node->child_sum_ + node->value_;
 }
 
