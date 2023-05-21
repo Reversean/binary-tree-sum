@@ -1,6 +1,7 @@
 #include <iostream>
 #include <omp.h>
 #include <map>
+#include <cmath>
 #include "tree_node.h"
 #include "pthread_args.h"
 #include "utils.h"
@@ -9,7 +10,7 @@ int TreeNode::GetValue() {
     return value_;
 }
 
-long long TreeNode::GetChildSum() {
+double TreeNode::GetChildSum() {
     return child_sum_;
 }
 
@@ -41,15 +42,16 @@ TreeNode *TreeNode::GetRightNode() {
     return right_child_;
 }
 
-long long TreeNode::SumSequentialRoutine(TreeNode *node) {
-    node->child_sum_ = 0;
+double TreeNode::SumSequentialRoutine(TreeNode *node) {
+    node->child_sum_ = node->value_;
     if (node->left_child_ != nullptr) {
-        node->child_sum_ += SumSequentialRoutine(node->left_child_);
+        node->child_sum_ *= SumSequentialRoutine(node->left_child_);
     }
     if (node->right_child_ != nullptr) {
-        node->child_sum_ += SumSequentialRoutine(node->right_child_);
+        node->child_sum_ *= SumSequentialRoutine(node->right_child_);
     }
-    return node->child_sum_ + node->value_;
+    node->child_sum_ = sqrt(node->child_sum_);
+    return node->child_sum_;
 }
 
 void TreeNode::SumSequential() {
@@ -66,7 +68,7 @@ void *TreeNode::SumPthreadRoutine(void *args) {
         return nullptr;
     }
 
-    node->child_sum_ = 0;
+    node->child_sum_ = node->value_;
 
     pthread_t threads[2];
     if (node->left_child_ != nullptr) {
@@ -81,13 +83,13 @@ void *TreeNode::SumPthreadRoutine(void *args) {
     int res;
     if (node->left_child_ != nullptr) {
         pthread_join(threads[0], (void **) &res);
-        node->child_sum_ += node->left_child_->child_sum_ + node->left_child_->value_;
+        node->child_sum_ *= node->left_child_->child_sum_;
     }
     if (node->right_child_ != nullptr) {
         pthread_join(threads[1], (void **) &res);
-        node->child_sum_ += node->right_child_->child_sum_ + node->right_child_->value_;
+        node->child_sum_ *= node->right_child_->child_sum_;
     }
-
+    node->child_sum_ = sqrt(node->child_sum_);
     return nullptr;
 }
 
@@ -96,14 +98,14 @@ void TreeNode::SumPthread(int thread_count) {
     SumPthreadRoutine((void *) &args);
 }
 
-long long TreeNode::SumOpenMPRoutine(TreeNode *node) {
+double TreeNode::SumOpenMPRoutine(TreeNode *node) {
     if (omp_get_active_level() >= omp_get_max_active_levels()) {
         return SumSequentialRoutine(node);
     }
 
-    node->child_sum_ = 0;
-    int left_sum = 0;
-    int right_sum = 0;
+    node->child_sum_ = node->value_;
+    double left_sum = 0;
+    double right_sum = 0;
 
 #pragma omp parallel sections num_threads(2) default(none) shared(node, left_sum, right_sum)
     {
@@ -120,8 +122,14 @@ long long TreeNode::SumOpenMPRoutine(TreeNode *node) {
             }
         }
     }
-    node->child_sum_ = left_sum + right_sum;
-    return node->child_sum_ + node->value_;
+    if (node->left_child_ != nullptr) {
+        node->child_sum_ *= left_sum;
+    }
+    if (node->right_child_ != nullptr) {
+        node->child_sum_ *= right_sum;
+    }
+    node->child_sum_ = sqrt(node->child_sum_);
+    return node->child_sum_;
 }
 
 void TreeNode::SumOpenMP(int thread_count) {
@@ -156,7 +164,7 @@ void TreeNode::PrintTree(
     }
 
     if (print_child_sum) {
-        printf("%d, %lld\n", value_, child_sum_);
+        printf("%d, %d\n", value_, child_sum_);
     } else {
         printf("%d\n", value_);
     }

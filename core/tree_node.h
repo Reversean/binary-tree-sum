@@ -9,7 +9,7 @@ public:
 
     int GetValue();
 
-    long long GetChildSum();
+    double GetChildSum();
 
     TreeNode *SetLeftNode(int value);
 
@@ -35,15 +35,15 @@ public:
 
 private:
     int value_;
-    long long child_sum_{};
+    double child_sum_{};
     TreeNode *left_child_{};
     TreeNode *right_child_{};
 
-    static long long SumSequentialRoutine(TreeNode *node);
+    static double SumSequentialRoutine(TreeNode *node);
 
     static void *SumPthreadRoutine(void *args);
 
-    static long long SumOpenMPRoutine(TreeNode *node);
+    static double SumOpenMPRoutine(TreeNode *node);
 
     void PrintTree(
         bool print_child_sum, int depth, std::vector<bool> flag, bool is_last);

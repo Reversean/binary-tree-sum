@@ -2,7 +2,7 @@
 #include <functional>
 #include "tree_node.h"
 
-const int min_node_value = 0;
+const int min_node_value = 1;
 const int max_node_value = 100;
 
 TreeNode *GenerateRandomTree(int max_depth) {
